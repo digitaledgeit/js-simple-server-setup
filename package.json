@@ -1,0 +1,17 @@
+{
+  "name": "simple-server-setup",
+  "description": "A library for creating a simple server with little effort.",
+  "keywords": ["http", "server", "express", "test", "simple"],
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url":  "git@github.com:digitaledgeit/js-simple-server-setup.git"
+  },
+  "bugs": {
+    "url": "https://github.com/digitaledgeit/js-simple-server-setup/issues"
+  },
+  "dependencies": {
+    "express": "^4.11.0"
+  },
+  "license": "MIT"
+}
