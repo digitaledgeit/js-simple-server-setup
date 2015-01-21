@@ -8,12 +8,12 @@ module.exports = {
 	/**
 	 * Create a new server
 	 * @param   {Object}    [options]             The server options
-	 * @param   {String}    [options.host]        The server host - localhost
-	 * @param   {Number}    [options.port]        The server port - 3000
+	 * @param   {Boolean}   [options.host]        The server host - localhost
+	 * @param   {Boolean}   [options.port]        The server port - 3000
 	 * @param   {Boolean}   [options.keepAlive]   Whether the server should keep connections alive (turning this on will take longer for the server to shutdown between tests - false
 	 * @param   {Boolean}   [options.secure]      Whether the server should serve requests on HTTPS - false
-	 * @param   {String}    [options.key]         The path to the server key - server.key
-	 * @param   {String}    [options.cert]        The path to the server certificate - server.cert
+	 * @param   {Boolean}   [options.key]         The path to the server key - server.key
+	 * @param   {Boolean}   [options.cert]        The path to the server certificate - server.cert
 	 * @param   {Function}  callback              A function to configure the application
 	 * @returns {http.Server}
 	 */
@@ -66,8 +66,6 @@ module.exports = {
 		}, 0);
 
 		return server;
-	},
-
-	bodyParser: require('body-parser')
+	}
 
 };
