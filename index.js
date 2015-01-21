@@ -66,6 +66,8 @@ module.exports = {
 		}, 0);
 
 		return server;
-	}
+	},
+
+	bodyParser: require('body-parser')
 
 };
