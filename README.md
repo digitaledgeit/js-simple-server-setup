@@ -49,28 +49,35 @@ A simple HTTPS server:
 A unit test to check the HTTP client has sent the Content-Type header:
 
     var assert  = require('assert');
-    var fetch   = require('go-fetch');
+    var client  = require('go-fetch');
     var server  = require('simple-server-setup');
     
     it('should set the Content-Type', function(done){
     
-        var svr = server.create(function(app) {
-            app.get('/', function(req, res) {
-                assert.equal(req.headers['content-type'], 'text/x-foo');
-                res.end();
-                svr.close();
-            })
-        });
+    	var svr = server.create(function(app) {
+    		app.get('/', function(req, res) {
+    			assert.equal(req.headers['content-type'], 'text/x-foo');
+    			res.end();
+    			svr.close();
+    		})
+    	});
     
-        fetch.get(svr.url, {'Content-Type': 'text/x-foo'} function(err, res) {
-            done();
-        });
-        
+    	svr.on('configured', function() {
+    
+    		client().get(svr.url, {'Content-Type': 'text/x-foo'}, function(err, res) {
+    			if (err) throw err;
+    			res.on('end', done).end();
+    		});
+    
+    	});
+    
     });
     
 ## API
 
-### .create([options], callback)
+### Methods
+
+#### .create([options], callback) : http.Server
     
 Create a new server with the specified options.
 
@@ -85,7 +92,14 @@ Options:
 	 @param   {Boolean}   [options.cert]        The path to the server certificate - server.cert
 	 @param   {Function}  callback              A function to configure the application
     
+### Events
+
+#### configured
+
+Emitted after the application has been configured.
+
 ## Misc
+
 ### Generating a self-signed key and certificate for a HTTPS server
 
     openssl req -nodes -new -x509 -keyout server.key -out server.cert

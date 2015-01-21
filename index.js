@@ -62,7 +62,8 @@ module.exports = {
 
 		//let the user setup the app (after we've returned the server object)
 		setTimeout(function() {
-			callback(app);
+			if (callback) callback(app);
+			server.emit('configured');
 		}, 0);
 
 		return server;
