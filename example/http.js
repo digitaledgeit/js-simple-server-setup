@@ -1,13 +1,13 @@
-var server = require('..');
+'use-strict';
 
-var svr = server.create(function(app) {
+const server = require('..');
 
-	console.log('Server listening at '+svr.url);
+server.create(app => {
 
-	app.get('/', function(req, res) {
-		res.write('HTTP SERVER');
-		res.end();
-		svr.close();
-	});
+    app.get('/', (req, res) => {
+      res.send('http - simple-server-setup');
+    });
 
-});
+  })
+  .then(server => console.log(`Listening at ${server.url}`))
+;

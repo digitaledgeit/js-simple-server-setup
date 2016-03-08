@@ -14,59 +14,58 @@ module.exports = {
 	 * @param   {Boolean}   [options.secure]      Whether the server should serve requests on HTTPS - false
 	 * @param   {Boolean}   [options.key]         The path to the server key - server.key
 	 * @param   {Boolean}   [options.cert]        The path to the server certificate - server.cert
-	 * @param   {Function}  callback              A function to configure the application
-	 * @returns {http.Server}
+	 * @param   {Function}  configure             A function called to configure the application
+	 * @returns {Promise}
 	 */
-	create: function(options, callback) {
-		var self = this, app = express(), server;
+	create: function(options, configure) {
+		var app = express();
+    var server = null;
 
 		//resolve optional arguments
 		if (arguments.length === 1) {
-			callback  = options;
+			configure  = options;
 			options   = {};
 		}
 
 		//override the default options
-		options.secure    = options.secure ||false;
+		options.secure    = options.secure || false;
 		options.host      = options.host || 'localhost';
 		options.port      = options.port || 3000;
 		options.keepAlive = options.keepAlive || false;
 
-		//create the server
-		if (options.secure) {
+    //disable the `keep-alive` header which prevents the server from closing immediately and causes slow test execution
+    if (!options.keepAlive) {
+      app.use(function(req, res, next) {
+        res.setHeader('Connection', 'close');
+        next();
+      });
+    }
 
-			var key = options.key || './'+options.host+'.key';
-			var cert = options.cert || './'+options.host+'.cert';
+    configure(app);
 
-			var config = {
-				key: fs.readFileSync(key),
-				cert: fs.readFileSync(cert)
-			};
-			server = https.createServer(config, app).listen(options.port, options.host);
-		} else {
-			server = http.createServer(app).listen(options.port, options.host);
-		}
+    return new Promise((resolve, reject) => {
 
-		server.secure   = options.secure;
-		server.host     = options.host;
-		server.port     = options.port;
-		server.url      = 'http'+(options.secure ? 's' : '')+'://'+options.host+':'+options.port;
+      //create the server
+      if (options.secure) {
 
-		//disable the `keep-alive` header which prevents the server from closing immediately and slow test execution
-		if (!options.keepAlive) {
-			app.use(function(req, res, next) {
-				res.setHeader('Connection', 'close');
-				next();
-			});
-		}
+        var key = options.key || './'+options.host+'.key';
+        var cert = options.cert || './'+options.host+'.cert';
 
-		//let the user setup the app (after we've returned the server object)
-		setTimeout(function() {
-			if (callback) callback(app);
-			server.emit('configured');
-		}, 0);
+        var config = {
+          key: fs.readFileSync(key),
+          cert: fs.readFileSync(cert)
+        };
+        server = https.createServer(config, app).listen(options.port, options.host, () => resolve(server));
+      } else {
+        server = http.createServer(app).listen(options.port, options.host, () => resolve(server));
+      }
 
-		return server;
+      server.secure   = options.secure;
+      server.host     = options.host;
+      server.port     = options.port;
+      server.url      = 'http'+(options.secure ? 's' : '')+'://'+options.host+':'+options.port;
+
+    });
 	}
 
 };

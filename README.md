@@ -2,82 +2,98 @@
 
 A library for creating a simple server with little effort.
 
-Bootstraps an ExpressJS app and route handler in just a few lines. Useful for testing scripts that use a HTTP client e.g.  [go-fetch](https://www.npmjs.com/package/go-fetch) or [browserbot](https://www.npmjs.com/package/browserbot). 
+Bootstrap an `express` app in just a few lines. Useful for testing scripts that use a HTTP client e.g.  [go-fetch](https://www.npmjs.com/package/go-fetch) or [browserbot](https://www.npmjs.com/package/browserbot).
 
 ## Installation
+
+    npm install --save-dev simple-server-setup
 
 ## Usage
 
 A simple HTTP server:
 
-    var server = require('simple-server-setup');
-    
-    var svr = server.create(function(app) {
-    
-	    console.log('Server listening at '+svr.url);
+```javascript
 
-    	app.get('/', function(req, res) {
-    		res.write('HTTP SERVER');
-    		res.end();
-    		svr.close();
-    	});
-    	
+const server = require('simple-server-setup');
+
+server.create(app => {
+
+    app.get('/', (req, res) => {
+      res.send('http - simple-server-setup');
     });
+
+  })
+  .then(server => console.log(`Listening at ${server.url}`))
+;
+
+
+```
 
 A simple HTTPS server:
 
-    var server = require('simple-server-setup');
-    
-    var options = {
-        secure: true,
-        key:    __dirname+'/server.key',
-        cert:   __dirname+'/server.cert'
-    };
-    
-    var svr = server.create(options, function(app) {
-    
-	    console.log('Server listening at '+svr.url);
+```javascript
 
-        app.get('/', function(req, res) {
-            res.write('HTTPS SERVER');
-            res.end();
-            svr.close();
-        });
-        
+const server = require('simple-server-setup');
+
+const options = {
+  secure: true,
+  key: __dirname + '/server.key',
+  cert: __dirname + '/server.cert'
+};
+
+server.create(options, app => {
+
+    app.get('/', (req, res) => {
+      res.send('https - simple-server-setup');
     });
+
+  })
+  .then(server => console.log(`Listening at ${server.url}`))
+;
+
+```
 
 A unit test to check the HTTP client has sent the Content-Type header:
 
-    var assert  = require('assert');
-    var client  = require('go-fetch');
-    var server  = require('simple-server-setup');
-    
-    it('should set the Content-Type', function(done){
-    
-    	var svr = server.create(function(app) {
-    		app.get('/', function(req, res) {
-    			assert.equal(req.headers['content-type'], 'text/x-foo');
-    			res.end();
-    			svr.close();
-    		})
-    	});
-    
-    	svr.on('configured', function() {
-    
-    		client().get(svr.url, {'Content-Type': 'text/x-foo'}, function(err, res) {
-    			if (err) throw err;
-    			res.on('end', done).end();
-    		});
-    
-    	});
-    
+```javascript
+
+const assert  = require('assert');
+const client  = require('go-fetch');
+const server  = require('simple-server-setup');
+
+it('should set the Content-Type', function (done) {
+
+  server.create(app => {
+    app.get('/', (req, res) => {
+      try {
+        assert.equal(req.headers['content-type'], 'text/x-foo');
+      } catch (err) {
+        done(err);
+      }
+      res.send('test - simple-server-setup');
     });
-    
+  })
+    .then(server => {
+      client().get(server.url, {'Content-Type': 'text/x-foo'}, (err, res) => {
+        if (err) throw err;
+        res.getBody().on('data', () => {/* do nothing */
+        });
+        res.getBody().on('end', () => server.close(done));
+      });
+
+    })
+    .catch(err => console.log(err))
+  ;
+
+});
+
+```
+
 ## API
 
 ### Methods
 
-#### .create([options], callback) : http.Server
+#### .create([options], callback) : Promise<http.Server>
     
 Create a new server with the specified options.
 
@@ -90,28 +106,24 @@ Options:
 	 @param   {Boolean}   [options.secure]      Whether the server should serve requests on HTTPS - false
 	 @param   {Boolean}   [options.key]         The path to the server key - server.key
 	 @param   {Boolean}   [options.cert]        The path to the server certificate - server.cert
-	 @param   {Function}  callback              A function to configure the application
+	 @param   {Function}  callback              A function to configure the express instance
     
 ### Events
 
-#### configured
-
-Emitted after the application has been configured.
-
-## Misc
+## Miscellaneous
 
 ### Generating a self-signed key and certificate for a HTTPS server
 
     openssl req -nodes -new -x509 -keyout server.key -out server.cert
      
+## Change log
+
+### 0.2.0
+
+- break: return a promise instead of an event emitter
+
 ## License
 
 The MIT License (MIT)
 
-Copyright (c) 2014 James Newell
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Copyright (c) 2016 James Newell

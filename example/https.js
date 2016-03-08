@@ -1,19 +1,19 @@
-var server = require('..');
+'use-strict'
 
-var options = {
-	secure: true,
-	key:    __dirname+'/server.key',
-	cert:   __dirname+'/server.cert'
+const server = require('..');
+
+const options = {
+  secure: true,
+  key: __dirname + '/server.key',
+  cert: __dirname + '/server.cert'
 };
 
-var svr = server.create(options, function(app) {
+server.create(options, app => {
 
-	console.log('Server listening at '+svr.url);
+    app.get('/', (req, res) => {
+      res.send('https - simple-server-setup');
+    });
 
-	app.get('/', function(req, res) {
-		res.write('HTTPS SERVER');
-		res.end();
-		svr.close();
-	});
-
-});
+  })
+  .then(server => console.log(`Listening at ${server.url}`))
+;

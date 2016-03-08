@@ -1,24 +1,31 @@
-var assert  = require('assert');
-var client  = require('go-fetch');
-var server  = require('..');
+'use-strict';
 
-//it('should set the Content-Type', function(done){
+const assert = require('assert');
+const client = require('go-fetch');
+const server = require('..');
 
-	var svr = server.create(function(app) {
-		app.get('/', function(req, res) {
-			assert.equal(req.headers['content-type'], 'text/x-foo');
-			res.end();
-			svr.close();
-		})
-	});
+it('should set the Content-Type', function (done) {
 
-	svr.on('configured', function() {
+  server.create(app => {
+    app.get('/', (req, res) => {
+      try {
+        assert.equal(req.headers['content-type'], 'text/x-foo');
+      } catch (err) {
+        done(err);
+      }
+      res.send('test - simple-server-setup');
+    });
+  })
+    .then(server => {
+      client().get(server.url, {'Content-Type': 'text/x-foo'}, (err, res) => {
+        if (err) throw err;
+        res.getBody().on('data', () => {/* do nothing */
+        });
+        res.getBody().on('end', () => server.close(done));
+      });
 
-		client().get(svr.url, {'Content-Type': 'text/x-foo'}, function(err, res) {
-			if (err) throw err;
-			res.on('end', function() {console.log('test done()')}).end();
-		});
+    })
+    .catch(err => console.log(err))
+  ;
 
-	});
-
-//});
+});
